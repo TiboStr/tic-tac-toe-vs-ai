@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,12 +65,12 @@ void print_board(char** board, int size) {
     }
 }
 
-int won(char** board, int size, char player, int x, int y) {
+int won(char** board, int size, char player, coordinate last_played) {
     int i;
 
     // check horizontal
     i = 0;
-    while (i < size && board[x][i] == player) {
+    while (i < size && board[last_played.x][i] == player) {
         i++;
     }
     if (i == size) {
@@ -78,7 +79,7 @@ int won(char** board, int size, char player, int x, int y) {
 
     // check vertical
     i = 0;
-    while (i < size && board[i][y] == player) {
+    while (i < size && board[i][last_played.y] == player) {
         i++;
     }
     if (i == size) {
@@ -86,7 +87,7 @@ int won(char** board, int size, char player, int x, int y) {
     }
 
     // check diagonal
-    if (x == y || (x == size - 1 && y == 0) || (x == 0 && y == size - 1)) {
+    if (last_played.x == last_played.y || (last_played.x == size - 1 && last_played.y == 0) || (last_played.x == 0 && last_played.y == size - 1)) {
         i = 0;
         while (i < size && board[i][i] == player) {
             i++;
@@ -156,7 +157,7 @@ int main(void) {
             moves++;
             print_board(board, size);
 
-            if (won(board, size, PLAYER, row, col)) {
+            if (won(board, size, PLAYER, (coordinate){row, col})) {
                 printf("Congratiolations, you won!\n");
                 break;
             }
@@ -171,13 +172,12 @@ int main(void) {
             coordinate coord = best_move(board, size);
             moves++;
             print_board(board, size);
-            if (won(board, size, AI, coord.x, coord.y)) {
+            if (won(board, size, AI, coord)) {
                 printf("You lose.\n");
                 break;
             }
         }
         moves = 0;
-        gameloop = 0;
 
         for (int i = 0; i < size; i++) {
             free(board[i]);
@@ -185,6 +185,11 @@ int main(void) {
         }
         free(board);
         board = NULL;
+
+        printf("Do you want to play again? (y/n): ");
+        char c;
+        scanf(" %c", &c);
+        gameloop = tolower(c) == 'y';
     }
 
     printf("Thank you for playing.\n");
