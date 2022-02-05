@@ -25,11 +25,11 @@ int minimax(char** board) {
     return 1;
 }
 
-coordinate best_move(char** board) {
+coordinate best_move(char** board, int size) {
     int best_score = INT_MIN;
     coordinate optimal_move;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
             if (!board[i][j]) {
                 board[i][j] = AI;
                 int score = minimax(board);
@@ -45,8 +45,14 @@ coordinate best_move(char** board) {
 }
 
 void print_board(char** board, int size) {
+    printf("  ");
     for (int i = 0; i < size; i++) {
-        printf("|");
+        printf(" %d", i);
+    }
+    printf("\n");
+
+    for (int i = 0; i < size; i++) {
+        printf("%d |", i);
         for (int j = 0; j < size; j++) {
             if (!board[i][j]) {
                 printf(".|");
@@ -103,68 +109,85 @@ int won(char** board, int size, char player, int x, int y) {
 int main(void) {
     printf("You are playing Tic Tac Toe.\n");
 
-    //  int** board = (int**)calloc(3, sizeof(int*));
-    char** board = (char**)malloc(3 * sizeof(char*));
-    for (int i = 0; i < 3; i++) {
-        board[i] = (char*)calloc(3, sizeof(char));
-    }
-
     int gameloop = 1;
-    int size = 3;
 
     int moves = 0;
     while (gameloop) {
-        //  printf("Enter a value (integer) to initialize the size of the grid: ");
-        // size = 3;
+        int size;
+        printf("> Enter a value (integer) to initialize the size of the grid: ");
+        scanf("%d", &size);
 
-        print_board(board, 3);
+        while (!(size >= 3 && size < 100)) {
+            printf("Please enter a valid size.\n");
+            printf("> Enter a value (integer) to initialize the size of the grid: ");
+            while (getchar() != '\n')
+                ;  // https://stackoverflow.com/a/68471839
+            scanf("%d", &size);
+        }
+        printf("You are playing on a %dx%d grid\n", size, size);
+
+        char** board = (char**)calloc(size, sizeof(char*));
+        for (int i = 0; i < size; i++) {
+            board[i] = (char*)calloc(size, sizeof(char));
+        }
+
+        print_board(board, size);
 
         while (1) {
-            int x, y;
+            int row, col;
 
             // PLAYER MAKES MOVE
-            printf("> Enter x and y: ");
-            scanf("%d%d", &x, &y);
+            printf("> Enter row and col: ");
+            scanf("%d%d", &row, &col);
 
-            while (!(0 <= x && x < 3 && 0 <= y && y < 3) || board[x][y]) {
-                printf("The values of x and y must be greater than 0 and smaller than 3\n");
-                printf("> Enter x and y: ");
+            while (!(0 <= row && row < size && 0 <= col && col < size) || board[row][col]) {
+                printf("The values for row and col must be greater than 0 and smaller than %d, make sure you select an empty spot.\n", size);
+                printf("> Enter row and col: ");
 
                 while (getchar() != '\n')
                     ;  // https://stackoverflow.com/a/68471839
 
-                scanf("%d%d", &x, &y);
+                scanf("%d%d", &row, &col);
             }
-            printf("You entered %d and %d\n", x, y);
+            printf("You entered %d and %d\n", row, col);
 
-            board[x][y] = PLAYER;
+            board[row][col] = PLAYER;
 
             moves++;
-            print_board(board, 3);
-            if (won(board, 3, PLAYER, x, y)) {
+            print_board(board, size);
+
+            if (won(board, size, PLAYER, row, col)) {
                 printf("Congratiolations, you won!\n");
                 break;
             }
 
-            if (moves >= 3 * 3) {
+            if (moves >= size * size) {
                 printf("Tie.\n");
                 break;
             }
 
             // AI MAKES MOVE
             printf("AI's turn:\n");
-            coordinate coord = best_move(board);
+            coordinate coord = best_move(board, size);
             moves++;
-            print_board(board, 3);
-            if (won(board, 3, AI, coord.x, coord.y)) {
+            print_board(board, size);
+            if (won(board, size, AI, coord.x, coord.y)) {
                 printf("You lose.\n");
                 break;
             }
         }
         moves = 0;
         gameloop = 0;
+
+        for (int i = 0; i < size; i++) {
+            free(board[i]);
+            board[i] = NULL;
+        }
+        free(board);
+        board = NULL;
     }
 
     printf("Thank you for playing.\n");
+
     return 1;
 }
